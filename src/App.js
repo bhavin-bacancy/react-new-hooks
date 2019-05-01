@@ -1,26 +1,44 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react';
+import UseStateComponent from './componenets/useState';
+import UseEffectComponent from './componenets/useEffect';
+import UseContextComponent from './componenets/useContext';
+import UseRefComponent from './componenets/useRef';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const styles = {
+	cardWrapper :{
+		backgroundColor: 'floralwhite',
+    border: '1px solid lightgrey',
+    padding: '15px',
+		borderRadius: '10px',
+		marginRight: '15px',
+		height:'fit-content',
+	},
+}
+class App extends Component {
+	render() {
+		return (
+			<div>
+				<h3 style={{ color: 'darkred', textAlign:"center", padding: '15px 0px 30px 0' }}> React Hooks example </h3>
+				<div className="container">
+					<div className="row">
+						<div style={styles.cardWrapper} className="col-sm">
+							<UseStateComponent />
+						</div>
+						<div style={styles.cardWrapper} className="col-sm">
+							<UseEffectComponent />
+						</div>
+						<div style={styles.cardWrapper} className="col-sm">
+							<UseContextComponent />
+						</div>
+						<div style={styles.cardWrapper} className="col-sm">
+							<UseRefComponent />
+						</div>
+					</div>
+				</div>
+			</div>
+		)
+	}
 }
 
 export default App;
+
