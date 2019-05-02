@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import UseStateComponent from './componenets/useState';
-import UseEffectComponent from './componenets/useEffect';
-import UseContextComponent from './componenets/useContext';
-import UseRefComponent from './componenets/useRef';
+import UseStateComponent from './components/useState';
+import UseEffectComponent from './components/useEffect';
+import UseContextComponent from './components/useContext';
+import UseRefComponent from './components/useRef';
 
 const styles = {
 	cardWrapper :{
