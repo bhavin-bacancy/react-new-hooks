@@ -1,0 +1,495 @@
+import React, { Component } from "react";
+import LeftMenu from "../../Components/LeftMenu";
+import Header from "../../Components/Header";
+import { getAllSM, getdsalistById, addSMDSAmapping } from "../../Utils/mapping";
+import { Link } from "react-router-dom";
+import ReactTable from "react-table";
+import "react-table/react-table.css";
+// import styled from "styled-components";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+toast.configure();
+
+// const HoverText = styled.ul`
+//   color: #000;
+//   :hover {
+//     background: lightblue;
+//     cursor: pointer;
+//   }
+// `;
+export class SmDsa extends Component {
+  state = {
+    loading: false,
+    unmapRsm: false,
+    search: "",
+    smName: false,
+    filtered: [],
+    searched: [],
+    dsaList: [],
+    listofmappedDsa: [],
+    selectSingleSm: false,
+    smId: "",
+    AllcheckValue: [],
+    dsacheck: false,
+    dsaContainer: []
+  };
+
+  componentDidMount() {
+    this.GetAllSmList();
+    console.log("my name", this.props.location.mappedsmId);
+    // this.setState({
+    //   smId: this.props.location.mappedsmId
+    // });
+    this.getdsalist();
+  }
+
+  GetAllSmList = () => {
+    let roleId = 120015;
+    getAllSM(roleId).then(response => {
+      this.setState({
+        filtered: response.data && response.data.data ? response.data.data : []
+      });
+      console.log(
+        "fileterd all sm list",
+        this.state.filtered && this.state.filtered
+      );
+    });
+  };
+
+  search = e => {
+    let { filtered, selectSingleSm, searched } = this.state;
+    this.setState({
+      selectSingleSm: true
+    });
+    let obj = [];
+    filtered.map(res => {
+      if (
+        res.employeeName.toLowerCase().match(e.target.value.toLowerCase()) ||
+        res.employeeId.toLowerCase().match(e.target.value.toLowerCase()) ||
+        res.emailId.toLowerCase().match(e.target.value.toLowerCase()) ||
+        res.mobileNumber.toString().match(e.target.value.toString())
+      ) {
+        // console.log("response on searching SM", res);
+        // this.setState({
+        //   searched: res
+        // });
+
+        obj.push(res);
+      }
+    });
+    this.setState({
+      searched: obj
+    });
+    console.log("searched", this.state.searched);
+  };
+
+  onCheck = e => {
+    const { listofmappedDsa } = this.state;
+    const AllcheckValue = [...this.state.AllcheckValue];
+
+    if (e.target.checked) {
+      AllcheckValue.push(e.target.value);
+    } else {
+      let jab = AllcheckValue.findIndex(res => {
+        if (res == e.target.value) {
+          return res;
+        }
+      });
+
+      AllcheckValue.splice(jab, 1);
+
+      console.log("jab", jab);
+    }
+
+    console.log("AllcheckValue", AllcheckValue);
+    this.setState({ AllcheckValue });
+    console.log("checkvalue", this.state.AllcheckValue);
+
+    // console.log("ksjkd", listofmappedDsa);
+
+    // const SmDsaMapping = () => {
+    //   addSMDSAmapping(this.state.AllcheckValue).then(response => {
+    //     console.log("rsponse", response);
+    //   });
+    //   console.log("values..", this.state.AllcheckValue);
+    // };
+    // SmDsaMapping();
+  };
+
+  selectedData = smsearch => {
+    let { selectSingleSm } = this.state;
+    console.log("nbfdhhe.....", smsearch);
+
+    if (selectSingleSm) {
+      this.setState(
+        {
+          selectSingleSm: false,
+          smId: smsearch.employeeId
+        },
+        () => this.getdsalist()
+      );
+    }
+  };
+
+  getdsalist = () => {
+    let { smId, loading } = this.state;
+    console.log("smId...", smId && smId);
+
+    this.setState({
+      loading: true
+    });
+    let myId = this.props.location.mappedsmId
+      ? this.props.location.mappedsmId
+      : smId;
+    getdsalistById(myId).then(response => {
+      this.setState({
+        dsaList: response.data && response.data.data ? response.data.data : [],
+        dsaContainer:
+          response.data && response.data.data ? response.data.data : [],
+        smName: true,
+        loading: false,
+        unmapRsm: true
+      });
+    });
+    console.log("dsaList", this.state.dsaList);
+  };
+
+  SMDSAmapping = () => {
+    let { AllcheckValue, dsaList, smId } = this.state;
+    let smDsaList = [];
+    dsaList.map(res => {
+      res["smId"] = smId;
+      AllcheckValue.map(val => {
+        console.log("res", res.dsacode);
+        console.log("val", val);
+
+        if (res.dsacode == val) {
+          smDsaList.push(res);
+          console.log("smDsaList", smDsaList);
+
+          // let obj = { smDsaList };
+          // addSMDSAmapping(obj).then(response => {
+          //   console.log("response", response);
+          //   if (response.data && response.data.error === "false") {
+          //     toast.success(
+          //       "Mapping has been done successfully",
+          //       {
+          //         type: toast.TYPE.SUCCESS,
+          //         autoClose: 2000
+          //       },
+          //       () => this.getdsalist()
+          //     );
+          //   }
+          // });
+        }
+        console.log("smDsaList", smDsaList && smDsaList);
+      });
+    });
+    console.log("smDsaList...", smDsaList && smDsaList);
+
+    let obj = { smDsaList };
+    addSMDSAmapping(obj).then(response => {
+      console.log("response", response);
+      if (response.data && response.data.error === "false") {
+        toast.success("Mapping has been done successfully", {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 2000
+        });
+
+        setTimeout(() => {
+          this.props.history.push({
+            pathname: "/mappedDsa",
+            state: smId
+          });
+        }, 2000);
+      }
+    });
+  };
+
+  Dsasearch = e => {
+    let { dsaContainer, dsaList } = this.state;
+    let array = [];
+    dsaContainer.map(res => {
+      if (res.emailId && res.companyname && res.branchname && res.phone_number)
+        if (
+          res.emailId.toLowerCase().match(e.target.value.toLowerCase()) ||
+          res.companyname.toLowerCase().match(e.target.value.toLowerCase()) ||
+          res.branchname.toLowerCase().match(e.target.value.toLowerCase()) ||
+          res.phone_number.toString().match(e.target.value.toString())
+        ) {
+          array.push(res);
+        }
+    });
+    this.setState({
+      // search: e.target.value,
+      dsaList: e.target.value ? array : dsaContainer
+    });
+  };
+
+  render() {
+    const {
+      loading,
+      searched,
+      selectSingleSm,
+      dsaList,
+      AllcheckValue,
+      listofmappedDsa,
+      smId,
+      unmapRsm
+    } = this.state;
+    console.log("listofmappedDsa", AllcheckValue);
+    console.log("smID", smId);
+
+    const columns = [
+      {
+        Header: "DSA Name",
+        // foldable: true,
+        Cell: ({ original }) => {
+          return original.companyname;
+          // return (onclick = () => this.addDsa(original.dsacode));
+        }
+      },
+      {
+        Header: "Email Id",
+        // foldable: true,
+        Cell: ({ original }) => {
+          return original.emailId;
+        }
+      },
+      {
+        Header: "Contact Number",
+        // foldable: true,
+        Cell: ({ original }) => {
+          return original.phone_number;
+        }
+      },
+
+      {
+        Header: "Branch Name",
+        // foldable: true,
+
+        Cell: ({ original }) => {
+          return original.branchname;
+        }
+      },
+      //   {
+      //     Header: "Mobile Number",
+      //     // foldable: true,
+
+      //     Cell: ({ original }) => {
+      //       return original.mobileNumber;
+      //     }
+      //   },
+      //   {
+      //     Header: "Status",
+
+      //     Cell: ({ original }) => {
+      //       return original.status;
+      //     }
+      //   },
+      //   {
+      //     Header: "Updated On",
+      //     accessor: "updateOn",
+
+      //     Cell: ({ original }) => {
+      //       return original.updatedDate;
+      //     }
+      //   },
+      {
+        Header: "Action",
+        accessor: "edit",
+        width: 140,
+        Cell: ({ original }) => {
+          return (
+            <div class="custom-control custom-checkbox text-center ml-5">
+              <input
+                type="checkbox"
+                class="custom-control-input"
+                id={original.dsacode}
+                value={original.dsacode}
+                onClick={e => {
+                  this.onCheck(e);
+                }}
+                checked={AllcheckValue.find(res => res == original.dsacode)}
+              />
+              <label class="custom-control-label" for={original.dsacode} />
+            </div>
+          );
+        }
+      }
+    ];
+    return (
+      <div className="dash_grid">
+        <LeftMenu />
+        <main className="bg-white">
+          <Header {...this.props} />
+          <section className="container-fluid">
+            <ToastContainer />
+            <h5 className="text-center mt-5 mx-auto user-box">
+              {this.state.smName ? "UnMapped DSA" : "SM-DSA Mapping"}
+            </h5>
+
+            <div className="text-center">
+              <div className="d-flex align-items-center mt-5">
+                <h5 className="mr-3 ml-5">Select SM</h5>
+                <div className="form-group m-0 search-input">
+                  <div className="inner-addon right-addon">
+                    <i className="glyphicon glyphicon-search mt-1 font-size-20"></i>
+                    <input
+                      type="text"
+                      className="form-input"
+                      name="search"
+                      placeholder="Search SM By SM Name,  Email Id,  Contact Number"
+                      onChange={this.search}
+                    />
+                  </div>
+                  <div>
+                    <div className="contain">
+                      {selectSingleSm ? (
+                        <div
+                          className="dropdown"
+                          style={{
+                            overflowY: "scroll",
+                            height: "120px",
+                            zindex: "-1"
+                            // marginRight: "220px",
+                            // marginLeft: "150px"
+                          }}
+                        >
+                          {searched.map(smsearch => (
+                            <li
+                              className="list-group-item"
+                              onClick={e => this.selectedData(smsearch)}
+                              key={smsearch.employeeId}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {smsearch.employeeId.toUpperCase()} -{" "}
+                              {smsearch.employeeName.toUpperCase()} -{" "}
+                              {smsearch.emailId.toUpperCase()} -{" "}
+                              {smsearch.mobileNumber}
+                            </li>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* <div className="contain">
+                {selectSingleSm ? (
+                  <div
+                    className="dropdown"
+                    style={{
+                      overflowY: "scroll",
+                      height: "120px",
+                      zindex: "-1",
+                      marginRight: "220px",
+                      marginLeft: "150px"
+                    }}
+                  >
+                    {searched.map(smsearch => (
+                      <li
+                        className="list-group-item"
+                        onClick={e => this.selectedData(smsearch)}
+                        key={smsearch.employeeId}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {smsearch.employeeId.toUpperCase()} -{" "}
+                        {smsearch.employeeName.toUpperCase()} -{" "}
+                        {smsearch.emailId.toUpperCase()}
+                      </li>
+                    ))}
+                  </div>
+                ) : null}
+              </div> */}
+            </div>
+            <div className="mt-5" style={{ display: "flex" }}>
+              <div>
+                <button type="button" class="mr-3">
+                  <Link
+                    to={{ pathname: "/mappedDsa", state: smId }}
+                    class="btn btn-info btn-lg"
+                  >
+                    Mapped DSA
+                  </Link>
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-info btn-lg mr-3 ${unmapRsm &&
+                    "title-orange"}`}
+                >
+                  UnMapped DSA
+                </button>
+              </div>
+              <div
+                className="form-group m-0 search-input"
+                style={{
+                  width: 250,
+                  position: "absolute",
+                  right: 20
+                }}
+              >
+                <div className="inner-addon right-addon">
+                  <i className="glyphicon glyphicon-search mt-1 font-size-20"></i>
+                  <input
+                    type="text"
+                    className="form-input"
+                    name="search"
+                    placeholder="Search.."
+                    onChange={this.Dsasearch}
+                  />
+                </div>
+              </div>
+            </div>
+            {!loading ? (
+              <React.Fragment>
+                {/* <div className="d-flex align-items-center mt-5">
+                  <div className="form-group m-0 search-input">
+                    <div className="inner-addon right-addon">
+                      <i className="glyphicon glyphicon-search mt-1 font-size-20"></i>
+                      <input
+                        type="text"
+                        className="form-input"
+                        name="search"
+                        placeholder="Search..."
+                        onChange={this.search}
+                      />
+                    </div>
+                  </div>
+                </div> */}
+                <div className="mt-4 react-table">
+                  <ReactTable
+                    scroll={{ x: "max-content", y: 350 }}
+                    data={dsaList}
+                    columns={columns}
+                    defaultPageSize={5}
+                    className="-striped -highlight"
+                  />
+                </div>
+                <div
+                  style={{ position: "absolute", right: 10 }}
+                  className="mt-2"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-info btn-lg mr-1"
+                    style={{ width: 200 }}
+                    onClick={this.SMDSAmapping}
+                  >
+                    Save
+                  </button>
+                </div>
+              </React.Fragment>
+            ) : (
+              <h4 className="text-center mt-5">LOADING...</h4>
+            )}
+          </section>
+        </main>
+      </div>
+    );
+  }
+}
+
+export default SmDsa;
